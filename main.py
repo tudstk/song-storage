@@ -7,6 +7,7 @@ from math import floor
 
 class DatabaseSingleton:
     connection = None
+
     def __new__(cls):
         if cls.connection is None:
             cls.connection = super(DatabaseSingleton, cls).__new__(cls)
@@ -69,7 +70,9 @@ def seconds_to_minutes(audio_tag_length):
 def get_song_metadata(file_path):
     try:
         audio = EasyID3(file_path)
-        title, album, artist, genre, composer, publisher = (audio.get(key, [''])[0] for key in ['title', 'album', 'artist', 'genre', 'composer', 'publisher'])
+        title, album, artist, genre, composer, publisher = (audio.get(key, [''])[0] for key in
+                                                            ['title', 'album', 'artist', 'genre', 'composer',
+                                                             'publisher'])
         year = int((audio.get('date', [''])[0]).split('-')[0])
 
         audio_tags = MP3(file_path)
@@ -94,19 +97,72 @@ def get_song_metadata(file_path):
         return None
 
 
+def Add_song(song_path, metadata):
+    if not os.path.exists("Storage"):
+        os.makedirs("Storage")
+
+    try:
+        file_name = os.path.basename(song_path)
+        destination_path = os.path.join("Storage", file_name)
+
+        with open(song_path, 'rb') as source, open(destination_path, 'wb') as destination:
+            for chunk in iter(lambda: source.read(4096), b''):
+                destination.write(chunk)
+
+        print(f"Song '{file_name}' has been successfully added to Storage.")
+
+        valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
+                               'Release Year', 'Track number', 'Composer',
+                               'Publisher', 'Track Length', 'Bitrate']
+
+        for k in valid_metadata_keys:
+            if k not in metadata or not metadata[k]:
+                metadata[k] = 'Unknown'
+
+        db_connection = DatabaseSingleton()
+        cursor = db_connection.get_cursor()
+
+        insert_query = """
+        INSERT INTO song_properties (file_name, title, artist, album, genre, release_year, track_num, composer, publisher, track_length, bitrate)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(insert_query, (
+            file_name,
+            metadata['Title'],
+            metadata['Artist'],
+            metadata['Album'],
+            metadata['Genre'],
+            metadata['Release Year'],
+            metadata['Track number'],
+            metadata['Composer'],
+            metadata['Publisher'],
+            metadata['Track Length'],
+            metadata['Bitrate']
+        ))
+
+        print(f"Metadata for '{file_name}' inserted into the database")
+
+    except FileNotFoundError:
+        print("File not found. Please provide a valid file path.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
 if __name__ == '__main__':
     dbconnection = DatabaseSingleton()
     conn = dbconnection.get_connection()
     cursor = dbconnection.get_cursor()
     create_song_properties_table(cursor)
-    conn.commit()
-    conn.close()
 
-    file_path = 'Storage/Ancestral.mp3'
-    metadata = get_song_metadata(file_path)
-    if metadata:
+    test_metadata = get_song_metadata("C:/Users/tudor/Downloads/FloatingPoint.mp3")
+    if test_metadata:
         print("song metadata:")
-        for key, value in metadata.items():
+        for key, value in test_metadata.items():
             print(f"{key}: {value}")
     else:
         print("Failed to retrieve metadata.")
+
+    Add_song("C:/Users/tudor/Downloads/FloatingPoint.mp3", test_metadata)
+    conn.commit()
+    conn.close()
