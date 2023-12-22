@@ -1,5 +1,6 @@
 import psycopg2
 import os
+import uuid
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 from math import floor
@@ -39,7 +40,7 @@ def create_song_properties_table(cursor):
     try:
         create_table_query = """
         CREATE TABLE IF NOT EXISTS song_properties (
-            id SERIAL PRIMARY KEY,
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             file_name VARCHAR(255),
             title VARCHAR(255),
             artist VARCHAR(255),
@@ -123,11 +124,12 @@ def Add_song(song_path, metadata):
         cursor = db_connection.get_cursor()
 
         insert_query = """
-        INSERT INTO song_properties (file_name, title, artist, album, genre, release_year, track_num, composer, publisher, track_length, bitrate)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO song_properties (id, file_name, title, artist, album, genre, release_year, track_num, composer, publisher, track_length, bitrate)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
         cursor.execute(insert_query, (
+            str(uuid.uuid4()),
             file_name,
             metadata['Title'],
             metadata['Artist'],
@@ -149,6 +151,29 @@ def Add_song(song_path, metadata):
         print(f"Error: {e}")
 
 
+def Delete_song(song_id):
+    try:
+        db_connection = DatabaseSingleton()
+        cursor = db_connection.get_cursor()
+
+        check_query = "SELECT id FROM song_properties WHERE id = %s"
+        cursor.execute(check_query, (song_id,))
+        result = cursor.fetchone()
+
+        if result:
+            delete_query = "DELETE FROM song_properties WHERE id = %s"
+            cursor.execute(delete_query, (song_id,))
+            db_connection.get_connection().commit()
+
+            print(f"Song deleted with id {song_id}")
+        else:
+            print(f"No song with id {song_id}")
+
+    except Exception as e:
+        print(f"Error in delete_song: {e}")
+        raise
+
+
 if __name__ == '__main__':
     dbconnection = DatabaseSingleton()
     conn = dbconnection.get_connection()
@@ -164,5 +189,8 @@ if __name__ == '__main__':
         print("Failed to retrieve metadata.")
 
     Add_song("C:/Users/tudor/Downloads/FloatingPoint.mp3", test_metadata)
+
+    Delete_song("1c4ea661-7862-4c42-b6d3-0bb4ba5e23ea")
+
     conn.commit()
     conn.close()
