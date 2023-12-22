@@ -135,8 +135,16 @@ def Delete_song(song_id):
         raise
 
 
-def Update_song(song_id, updated_metadata):
+def Modify_data(song_id, metadata):
     try:
+        valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
+                               'Release Year', 'Composer', 'Publisher']
+
+        invalid_keys = [key for key in metadata.keys() if key not in valid_metadata_keys]
+        if invalid_keys:
+            print(f"Invalid metadata arguments: {invalid_keys}")
+            return
+
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
 
@@ -152,25 +160,19 @@ def Update_song(song_id, updated_metadata):
                 album = COALESCE(%s, album),
                 genre = COALESCE(%s, genre),
                 release_year = COALESCE(%s, release_year),
-                track_num = COALESCE(%s, track_num),
                 composer = COALESCE(%s, composer),
-                publisher = COALESCE(%s, publisher),
-                track_length = COALESCE(%s, track_length),
-                bitrate = COALESCE(%s, bitrate)
+                publisher = COALESCE(%s, publisher)
             WHERE id = %s
             """
 
             cursor.execute(update_query, (
-                updated_metadata.get('Title', existing_metadata[2]),
-                updated_metadata.get('Artist', existing_metadata[3]),
-                updated_metadata.get('Album', existing_metadata[4]),
-                updated_metadata.get('Genre', existing_metadata[5]),
-                updated_metadata.get('Release Year', existing_metadata[6]),
-                updated_metadata.get('Track number', existing_metadata[7]),
-                updated_metadata.get('Composer', existing_metadata[8]),
-                updated_metadata.get('Publisher', existing_metadata[9]),
-                updated_metadata.get('Track Length', existing_metadata[10]),
-                updated_metadata.get('Bitrate', existing_metadata[11]),
+                metadata.get('Title', existing_metadata[2]),
+                metadata.get('Artist', existing_metadata[3]),
+                metadata.get('Album', existing_metadata[4]),
+                metadata.get('Genre', existing_metadata[5]),
+                metadata.get('Release Year', existing_metadata[6]),
+                metadata.get('Composer', existing_metadata[8]),
+                metadata.get('Publisher', existing_metadata[9]),
                 song_id
             ))
 
@@ -181,7 +183,7 @@ def Update_song(song_id, updated_metadata):
             song_path = os.path.join("Storage", cursor.fetchone()[0])
 
             audio = EasyID3(song_path)
-            for key, value in updated_metadata.items():
+            for key, value in metadata.items():
                 if key in audio:
                     audio[key] = value
             audio.save()

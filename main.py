@@ -61,13 +61,11 @@ if __name__ == '__main__':
     crud.Delete_song("c97a3dba-120f-482d-9ab6-46e2dbf67236")
 
     update_metadata = {
-        'Title': 'Un titlu schimbat!!',
-        'Artist': 'Un artist schimbat!!',
-        'Publisher': 'Cineva!',
-        'Track Length': '00:12',
-        'Bitrate': '330kbs'
+        'Title': 'Un titlu schimbat!!?!',
+        'Artist': 'Un artist schimbat!!?',
+        'Publisher': 'Cineva?!'
     }
-    crud.Update_song("1acddf15-6d81-4d96-a00c-c719bf8fae71", update_metadata)
+    crud.Modify_data("1acddf15-6d81-4d96-a00c-c719bf8fae71", update_metadata)
 
     conn.commit()
     conn.close()
