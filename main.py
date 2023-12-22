@@ -1,4 +1,3 @@
-import psycopg2
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 from math import floor
@@ -60,6 +59,15 @@ if __name__ == '__main__':
     crud.Add_song("C:/Users/tudor/Downloads/FloatingPoint.mp3", test_metadata)
 
     crud.Delete_song("c97a3dba-120f-482d-9ab6-46e2dbf67236")
+
+    update_metadata = {
+        'Title': 'Un titlu schimbat!!',
+        'Artist': 'Un artist schimbat!!',
+        'Publisher': 'Cineva!',
+        'Track Length': '00:12',
+        'Bitrate': '330kbs'
+    }
+    crud.Update_song("1acddf15-6d81-4d96-a00c-c719bf8fae71", update_metadata)
 
     conn.commit()
     conn.close()

@@ -2,6 +2,8 @@ import psycopg2
 import os
 import uuid
 
+from mutagen.easyid3 import EasyID3
+
 
 class DatabaseSingleton:
     connection = None
@@ -130,4 +132,64 @@ def Delete_song(song_id):
 
     except Exception as e:
         print(f"Error in delete_song: {e}")
+        raise
+
+
+def Update_song(song_id, updated_metadata):
+    try:
+        db_connection = DatabaseSingleton()
+        cursor = db_connection.get_cursor()
+
+        check_query = "SELECT * FROM song_properties WHERE id = %s"
+        cursor.execute(check_query, (song_id,))
+        existing_metadata = cursor.fetchone()
+
+        if existing_metadata:
+            update_query = """
+            UPDATE song_properties
+            SET title = COALESCE(%s, title),
+                artist = COALESCE(%s, artist),
+                album = COALESCE(%s, album),
+                genre = COALESCE(%s, genre),
+                release_year = COALESCE(%s, release_year),
+                track_num = COALESCE(%s, track_num),
+                composer = COALESCE(%s, composer),
+                publisher = COALESCE(%s, publisher),
+                track_length = COALESCE(%s, track_length),
+                bitrate = COALESCE(%s, bitrate)
+            WHERE id = %s
+            """
+
+            cursor.execute(update_query, (
+                updated_metadata.get('Title', existing_metadata[2]),
+                updated_metadata.get('Artist', existing_metadata[3]),
+                updated_metadata.get('Album', existing_metadata[4]),
+                updated_metadata.get('Genre', existing_metadata[5]),
+                updated_metadata.get('Release Year', existing_metadata[6]),
+                updated_metadata.get('Track number', existing_metadata[7]),
+                updated_metadata.get('Composer', existing_metadata[8]),
+                updated_metadata.get('Publisher', existing_metadata[9]),
+                updated_metadata.get('Track Length', existing_metadata[10]),
+                updated_metadata.get('Bitrate', existing_metadata[11]),
+                song_id
+            ))
+
+            print(f"Metadata updated for song with id {song_id}")
+
+            song_path_query = "SELECT file_name FROM song_properties WHERE id = %s"
+            cursor.execute(song_path_query, (song_id,))
+            song_path = os.path.join("Storage", cursor.fetchone()[0])
+
+            audio = EasyID3(song_path)
+            for key, value in updated_metadata.items():
+                if key in audio:
+                    audio[key] = value
+            audio.save()
+
+            print(f"Song metadata updated for song with id {song_id}")
+        else:
+            print(f"No song with id {song_id} found")
+
+    except Exception as e:
+        print(f"Error in Update_song: {e}")
         raise
