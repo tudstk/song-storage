@@ -1,23 +1,37 @@
 import psycopg2
+import os
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 from math import floor
 
 
-def connect_to_db():
-    try:
-        conn = psycopg2.connect(
-            database="SongStorage", user='postgres', password='123', host='127.0.0.1', port='5432'
-        )
-        cursor = conn.cursor()
+class DatabaseSingleton:
+    connection = None
+    def __new__(cls):
+        if cls.connection is None:
+            cls.connection = super(DatabaseSingleton, cls).__new__(cls)
+            try:
+                cls.connection.conn = psycopg2.connect(
+                    database="SongStorage", user='postgres', password='123', host='127.0.0.1', port='5432'
+                )
+                cls.connection.cursor = cls.connection.conn.cursor()
+                cls.connection.cursor.execute("select version()")
+                data = cls.connection.cursor.fetchone()
+                print("Connection established to: ", data)
+            except psycopg2.Error as e:
+                print("Error while connecting to db:", e)
+        return cls.connection
 
-        cursor.execute("select version()")
-        data = cursor.fetchone()
-        print("Connection established to: ", data)
+    def get_connection(self):
+        return self.conn
 
-        return conn, cursor
-    except psycopg2.Error as e:
-        print("Error while connecting to db:", e)
+    def get_cursor(self):
+        return self.cursor
+
+    def close_connection(self):
+        self.cursor.close()
+        self.conn.close()
+        print("Connection closed.")
 
 
 def create_song_properties_table(cursor):
@@ -81,7 +95,9 @@ def get_song_metadata(file_path):
 
 
 if __name__ == '__main__':
-    conn, cursor = connect_to_db()
+    dbconnection = DatabaseSingleton()
+    conn = dbconnection.get_connection()
+    cursor = dbconnection.get_cursor()
     create_song_properties_table(cursor)
     conn.commit()
     conn.close()
