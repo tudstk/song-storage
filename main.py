@@ -2,6 +2,7 @@ from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 from math import floor
 import crud
+import filtering
 
 
 def seconds_to_minutes(audio_tag_length):
@@ -39,33 +40,30 @@ def get_song_metadata(file_path):
         }
     except Exception as e:
         print(f"Error: {e}")
-        return None
 
 
 if __name__ == '__main__':
     dbconnection = crud.DatabaseSingleton()
     conn = dbconnection.get_connection()
     cursor = dbconnection.get_cursor()
-    crud.create_song_properties_table(cursor)
+    # crud.create_song_properties_table(cursor)
 
-    test_metadata = get_song_metadata("C:/Users/tudor/Downloads/FloatingPoint.mp3")
-    if test_metadata:
-        print("song metadata:")
-        for key, value in test_metadata.items():
-            print(f"{key}: {value}")
-    else:
-        print("Failed to retrieve metadata.")
+    metadata1 = get_song_metadata("C:/Users/tudor/Downloads/Ancestral.mp3")
 
-    crud.Add_song("C:/Users/tudor/Downloads/FloatingPoint.mp3", test_metadata)
+    crud.Add_song("C:/Users/tudor/Downloads/Ancestral.mp3", metadata1)
 
-    crud.Delete_song("c97a3dba-120f-482d-9ab6-46e2dbf67236")
+    # crud.Delete_song("c97a3dba-120f-482d-9ab6-46e2dbf67236")
 
-    update_metadata = {
-        'Title': 'Un titlu schimbat!!?!',
-        'Artist': 'Un artist schimbat!!?',
-        'Publisher': 'Cineva?!'
+    # update_metadata = {
+    #     'Title': 'Un titlu schimbat!!?!',
+    #     'Artist': 'Un artist schimbat!!?',
+    #     'Publisher': 'Cineva?!'
+    # }
+    # crud.Modify_data("1acddf15-6d81-4d96-a00c-c719bf8fae71", update_metadata)
+
+    search_dict = {
+        'Artist': 'the algorithm'
     }
-    crud.Modify_data("1acddf15-6d81-4d96-a00c-c719bf8fae71", update_metadata)
-
+    filtering.Search(search_dict)
     conn.commit()
     conn.close()
