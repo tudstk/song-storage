@@ -45,8 +45,8 @@ def create_song_properties_table(cursor):
             artist VARCHAR(255),
             album VARCHAR(255),
             genre VARCHAR(255),
-            release_year INTEGER,
-            track_num INTEGER,
+            release_year VARCHAR(255),
+            track_num VARCHAR(255),
             composer VARCHAR(255),
             publisher VARCHAR(255),
             track_length VARCHAR(255),
@@ -195,3 +195,8 @@ def Modify_data(song_id, metadata):
     except Exception as e:
         print(f"Error in Update_song: {e}")
         raise
+
+
+
+
+
