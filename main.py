@@ -51,7 +51,7 @@ if __name__ == '__main__':
     song_path = 'C:/Users/tudor/Downloads/Vertigo Queen.mp3'
 
     metadata1 = get_song_metadata(song_path)
-    crud.Add_song(song_path, metadata1)
+    # crud.Add_song(song_path, metadata1)
 
     # crud.Delete_song("2c6f1225-353b-41e7-857e-44a5c9bc8b5c")
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     }
     filtering.Search(search_dict)
 
-    filtering.Create_save_list('D:/pp_output', search_dict)
+    filtering.Create_save_list('D:/pp_output', search_dict, "playlist_alanmor.zip")
 
     conn.commit()
     conn.close()

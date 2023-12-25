@@ -1,9 +1,10 @@
 import psycopg2
+import zipfile
 import os
 from crud import DatabaseSingleton
 
 
-def Search(criteria):
+def Search(filters):
     try:
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
@@ -12,7 +13,7 @@ def Search(criteria):
                         "publisher, track_length, bitrate FROM song_properties WHERE ")
         conditions = []
 
-        for key, value in criteria.items():
+        for key, value in filters.items():
             conditions.append(f"{key.lower()} ILIKE %s")
             cursor.execute(
                 "SELECT column_name FROM information_schema.columns WHERE table_name = 'song_properties' AND "
@@ -26,8 +27,8 @@ def Search(criteria):
 
         search_query += " AND ".join(conditions)
 
-        criteria_values = [v.lower() if isinstance(v, str) else v for v in criteria.values()]
-        cursor.execute(search_query, tuple(criteria_values))
+        filters_values = [v.lower() if isinstance(v, str) else v for v in filters.values()]
+        cursor.execute(search_query, tuple(filters_values))
 
         songs_found = cursor.fetchall()
 
@@ -48,27 +49,27 @@ def Search(criteria):
         raise
 
 
-def Create_save_list(output_folder, criteria):
+def Create_save_list(output_folder, filters, zip_filename):
     try:
-        songs_found = Search(criteria)
+        songs_found = Search(filters)
 
         if songs_found:
-            if not os.path.exists(output_folder):
-                os.makedirs(output_folder)
+            zip_file_path = os.path.join(output_folder, zip_filename)
 
-            for song in songs_found:
-                file_name = song[0]
-                source_path = os.path.join("Storage", file_name)
-                destination_path = os.path.join(output_folder, file_name)
-                try:
-                    with open(source_path, 'rb') as source, open(destination_path, 'wb') as destination:
-                        while True:
-                            chunk = source.read(4096)
-                            if not chunk:
-                                break
-                            destination.write(chunk)
-                    print(f"File '{source_path}' copied to '{destination_path}'")
-                except FileNotFoundError:
-                    print("File not found.")
+            with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
+                for song in songs_found:
+                    file_name = song[0]
+                    source_path = os.path.join("Storage", file_name)
+
+                    try:
+                        zip_file.write(source_path, arcname=file_name)
+                        print(f"File added to the archive.")
+                    except FileNotFoundError:
+                        print(f"File not found.")
+
+            print("Zip archive created!")
+        else:
+            print("No songs found for your search filters.")
+
     except Exception as e:
         print(f"Error in Create_save_list: {e}")

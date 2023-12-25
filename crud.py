@@ -196,7 +196,6 @@ def Modify_data(song_id, metadata):
         print(f"Error in Update_song: {e}")
         raise
 
-    import psycopg2
 
 
 
