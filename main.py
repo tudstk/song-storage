@@ -19,10 +19,10 @@ def get_song_metadata(file_path):
         title, album, artist, genre, composer, publisher = (audio.get(key, [''])[0] for key in
                                                             ['title', 'album', 'artist', 'genre', 'composer',
                                                              'publisher'])
-        year = int((audio.get('date', [''])[0]).split('-')[0])
+        year = audio.get('date', [''])[0].split('-')[0]
 
         audio_tags = MP3(file_path)
-        track_number = audio_tags.tags['TRCK'][0]
+        track_number = str(audio_tags.tags.get('TRCK', [''])[0])
         length = seconds_to_minutes(audio_tags.info.length)
         bitrate = str(floor(audio_tags.info.bitrate / 1000)) + 'kbs'
 
@@ -46,23 +46,27 @@ if __name__ == '__main__':
     dbconnection = crud.DatabaseSingleton()
     conn = dbconnection.get_connection()
     cursor = dbconnection.get_cursor()
-    # crud.create_song_properties_table(cursor)
+    crud.create_song_properties_table(cursor)
 
-    metadata1 = get_song_metadata("C:/Users/tudor/Downloads/Ancestral.mp3")
+    metadata1 = get_song_metadata("C:/Users/tudor/Downloads/EchoesFollow.mp3")
 
-    crud.Add_song("C:/Users/tudor/Downloads/Ancestral.mp3", metadata1)
+    crud.Add_song("C:/Users/tudor/Downloads/EchoesFollow.mp3", metadata1)
 
-    # crud.Delete_song("c97a3dba-120f-482d-9ab6-46e2dbf67236")
+    # crud.Delete_song("2c6f1225-353b-41e7-857e-44a5c9bc8b5c")
 
-    # update_metadata = {
-    #     'Title': 'Un titlu schimbat!!?!',
-    #     'Artist': 'Un artist schimbat!!?',
-    #     'Publisher': 'Cineva?!'
-    # }
-    # crud.Modify_data("1acddf15-6d81-4d96-a00c-c719bf8fae71", update_metadata)
+    update_metadata = {
+        'Title': 'Liber',
+        'Artist': 'Keo',
+        'Album': 'Nu stiu',
+        'Genre': 'Pop',
+        'Release Year': '2011',
+        'Composer': 'Keo',
+        'Publisher': 'Keo',
+    }
+    crud.Modify_data("29f0a460-e2b7-4953-8056-e21f542a3d8b", update_metadata)
 
     search_dict = {
-        'Artist': 'the algorithm'
+        'Artist': 'Alon mor'
     }
     filtering.Search(search_dict)
     conn.commit()
