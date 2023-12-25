@@ -49,14 +49,13 @@ def Search(filters):
         raise
 
 
-def Create_save_list(output_folder, filters, zip_filename):
+def Create_save_list(output_folder, filters):
     try:
         songs_found = Search(filters)
 
         if songs_found:
-            zip_file_path = os.path.join(output_folder, zip_filename)
 
-            with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
+            with zipfile.ZipFile(output_folder, 'w') as zip_file:
                 for song in songs_found:
                     file_name = song[0]
                     source_path = os.path.join("Storage", file_name)

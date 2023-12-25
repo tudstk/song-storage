@@ -71,7 +71,7 @@ if __name__ == '__main__':
     }
     filtering.Search(search_dict)
 
-    filtering.Create_save_list('D:/pp_output', search_dict, "playlist_alanmor.zip")
+    filtering.Create_save_list('D:/pp_output/my_playlist.zip', search_dict)
 
     conn.commit()
     conn.close()
