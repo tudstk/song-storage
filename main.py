@@ -48,9 +48,10 @@ if __name__ == '__main__':
     cursor = dbconnection.get_cursor()
     crud.create_song_properties_table(cursor)
 
-    metadata1 = get_song_metadata("C:/Users/tudor/Downloads/EchoesFollow.mp3")
+    song_path = 'C:/Users/tudor/Downloads/Vertigo Queen.mp3'
 
-    crud.Add_song("C:/Users/tudor/Downloads/EchoesFollow.mp3", metadata1)
+    metadata1 = get_song_metadata(song_path)
+    crud.Add_song(song_path, metadata1)
 
     # crud.Delete_song("2c6f1225-353b-41e7-857e-44a5c9bc8b5c")
 
@@ -69,5 +70,8 @@ if __name__ == '__main__':
         'Artist': 'Alon mor'
     }
     filtering.Search(search_dict)
+
+    filtering.Create_save_list('D:/pp_output', search_dict)
+
     conn.commit()
     conn.close()

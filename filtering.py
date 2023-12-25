@@ -1,4 +1,5 @@
 import psycopg2
+import os
 from crud import DatabaseSingleton
 
 
@@ -38,9 +39,36 @@ def Search(criteria):
                 for key, value in filtered_song.items():
                     print(f"'{key}' = '{value}'")
                 print("\n")
+            return songs_found
         else:
             print("No songs found for your search filters.")
 
     except psycopg2.Error as e:
         print(f"Error in Search: {e}")
         raise
+
+
+def Create_save_list(output_folder, criteria):
+    try:
+        songs_found = Search(criteria)
+
+        if songs_found:
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+
+            for song in songs_found:
+                file_name = song[0]
+                source_path = os.path.join("Storage", file_name)
+                destination_path = os.path.join(output_folder, file_name)
+                try:
+                    with open(source_path, 'rb') as source, open(destination_path, 'wb') as destination:
+                        while True:
+                            chunk = source.read(4096)
+                            if not chunk:
+                                break
+                            destination.write(chunk)
+                    print(f"File '{source_path}' copied to '{destination_path}'")
+                except FileNotFoundError:
+                    print("File not found.")
+    except Exception as e:
+        print(f"Error in Create_save_list: {e}")
