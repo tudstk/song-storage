@@ -48,30 +48,31 @@ if __name__ == '__main__':
     cursor = dbconnection.get_cursor()
     crud.create_song_properties_table(cursor)
 
-    song_path = 'C:/Users/tudor/Downloads/Vertigo Queen.mp3'
+    song_path = 'C:/Users/tudor/Downloads/Userspace.mp3'
 
     metadata1 = get_song_metadata(song_path)
-    # crud.Add_song(song_path, metadata1)
+    crud.Add_song(song_path, metadata1)
 
     # crud.Delete_song("2c6f1225-353b-41e7-857e-44a5c9bc8b5c")
 
-    update_metadata = {
-        'Title': 'Liber',
-        'Artist': 'Keo',
-        'Album': 'Nu stiu',
-        'Genre': 'Pop',
-        'Release Year': '2011',
-        'Composer': 'Keo',
-        'Publisher': 'Keo',
-    }
-    crud.Modify_data("29f0a460-e2b7-4953-8056-e21f542a3d8b", update_metadata)
+    # update_metadata = {
+    #     'Title': 'Liber',
+    #     'Artist': 'Keo',
+    #     'Album': 'Nu stiu',
+    #     'Genre': 'Pop',
+    #     'Release Year': '2011',
+    #     'Composer': 'Keo',
+    #     'Publisher': 'Keo',
+    # }
+    # crud.Modify_data("29f0a460-e2b7-4953-8056-e21f542a3d8b", update_metadata)
 
     search_dict = {
-        'Artist': 'Alon mor'
+        'Genre': 'Electronic'
     }
     filtering.Search(search_dict)
 
-    filtering.Create_save_list('D:/pp_output/my_playlist.zip', search_dict)
+    filtering.Create_save_list('D:/pp_output/electronic_playlist.zip', search_dict)
 
+    # crud.Delete_song("796bde20-21fb-4a63-99ad-0b29c6eacf6d")
     conn.commit()
     conn.close()

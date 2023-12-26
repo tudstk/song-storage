@@ -67,12 +67,6 @@ def Add_song(song_path, metadata):
         file_name = os.path.basename(song_path)
         destination_path = os.path.join("Storage", file_name)
 
-        with open(song_path, 'rb') as source, open(destination_path, 'wb') as destination:
-            for chunk in iter(lambda: source.read(4096), b''):
-                destination.write(chunk)
-
-        print(f"Song '{file_name}' has been successfully added to Storage.")
-
         valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
                                'Release Year', 'Track number', 'Composer',
                                'Publisher', 'Track Length', 'Bitrate']
@@ -106,6 +100,12 @@ def Add_song(song_path, metadata):
 
         print(f"Metadata for '{file_name}' inserted into the database")
 
+        with open(song_path, 'rb') as source, open(destination_path, 'wb') as destination:
+            for chunk in iter(lambda: source.read(4096), b''):
+                destination.write(chunk)
+
+        print(f"Song '{file_name}' has been successfully added to Storage.")
+
     except FileNotFoundError:
         print("File not found. Please provide a valid file path.")
     except Exception as e:
@@ -117,7 +117,7 @@ def Delete_song(song_id):
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
 
-        check_query = "SELECT id FROM song_properties WHERE id = %s"
+        check_query = "SELECT id, file_name FROM song_properties WHERE id = %s"
         cursor.execute(check_query, (song_id,))
         result = cursor.fetchone()
 
@@ -125,7 +125,7 @@ def Delete_song(song_id):
             delete_query = "DELETE FROM song_properties WHERE id = %s"
             cursor.execute(delete_query, (song_id,))
             db_connection.get_connection().commit()
-
+            os.remove("Storage/" + result[1])
             print(f"Song deleted with id {song_id}")
         else:
             print(f"No song with id {song_id}")
@@ -195,8 +195,3 @@ def Modify_data(song_id, metadata):
     except Exception as e:
         print(f"Error in Update_song: {e}")
         raise
-
-
-
-
-
