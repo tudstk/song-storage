@@ -1,3 +1,5 @@
+import os
+import pygame
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 from math import floor
@@ -42,13 +44,33 @@ def get_song_metadata(file_path):
         print(f"Error: {e}")
 
 
+def Play(song_name):
+    song_path = 'Storage/' + song_name
+
+    if not os.path.exists(song_path):
+        print(f"Error: '{song_name}' not found in Storage")
+        return
+
+    pygame.init()
+    pygame.mixer.init()
+
+    try:
+        pygame.mixer.music.load(song_path)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+
+    except pygame.error as e:
+        print(f"Error in Play: {e}")
+
+
 if __name__ == '__main__':
     dbconnection = crud.DatabaseSingleton()
     conn = dbconnection.get_connection()
     cursor = dbconnection.get_cursor()
-    crud.create_song_properties_table(cursor)
+    # crud.create_song_properties_table(cursor)
 
-    song_path = 'C:/Users/tudor/Downloads/Userspace.mp3'
+    song_path = 'C:/Users/tudor/Downloads/BruteForce.mp3'
 
     metadata1 = get_song_metadata(song_path)
     crud.Add_song(song_path, metadata1)
@@ -71,8 +93,8 @@ if __name__ == '__main__':
     }
     filtering.Search(search_dict)
 
-    filtering.Create_save_list('D:/pp_output/electronic_playlist.zip', search_dict)
-
-    # crud.Delete_song("796bde20-21fb-4a63-99ad-0b29c6eacf6d")
+    # filtering.Create_save_list('D:/pp_output/electronic_playlist.zip', search_dict)
     conn.commit()
     conn.close()
+
+    Play('BruteForce.mp3')
