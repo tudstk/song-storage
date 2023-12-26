@@ -117,7 +117,7 @@ def Delete_song(song_id):
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
 
-        check_query = "SELECT id FROM song_properties WHERE id = %s"
+        check_query = "SELECT id, file_name FROM song_properties WHERE id = %s"
         cursor.execute(check_query, (song_id,))
         result = cursor.fetchone()
 
@@ -125,7 +125,7 @@ def Delete_song(song_id):
             delete_query = "DELETE FROM song_properties WHERE id = %s"
             cursor.execute(delete_query, (song_id,))
             db_connection.get_connection().commit()
-
+            os.remove("Storage/" + result[1])
             print(f"Song deleted with id {song_id}")
         else:
             print(f"No song with id {song_id}")

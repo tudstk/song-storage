@@ -73,5 +73,6 @@ if __name__ == '__main__':
 
     filtering.Create_save_list('D:/pp_output/my_playlist.zip', search_dict)
 
+    crud.Delete_song("796bde20-21fb-4a63-99ad-0b29c6eacf6d")
     conn.commit()
     conn.close()
