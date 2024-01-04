@@ -2,8 +2,6 @@ import psycopg2
 import os
 import uuid
 
-from mutagen.easyid3 import EasyID3
-
 
 class DatabaseSingleton:
     connection = None
@@ -13,7 +11,7 @@ class DatabaseSingleton:
             cls.connection = super(DatabaseSingleton, cls).__new__(cls)
             try:
                 cls.connection.conn = psycopg2.connect(
-                    database="SongStorage", user='postgres', password='123', host='127.0.0.1', port='5432'
+                    database="SongStorage", user='postgres', password='1234', host='127.0.0.1', port='5432'
                 )
                 cls.connection.cursor = cls.connection.conn.cursor()
                 cls.connection.cursor.execute("select version()")
@@ -45,7 +43,7 @@ def create_song_properties_table(cursor):
             artist VARCHAR(255),
             album VARCHAR(255),
             genre VARCHAR(255),
-            release_year VARCHAR(255),
+            release_date VARCHAR(255),
             track_num VARCHAR(255),
             composer VARCHAR(255),
             publisher VARCHAR(255),
@@ -64,25 +62,29 @@ def Add_song(song_path, metadata):
         os.makedirs("Storage")
 
     try:
+        print("RECEIVED METADATAAA:", metadata)
         file_name = os.path.basename(song_path)
         destination_path = os.path.join("Storage", file_name)
 
         valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
-                               'Release Year', 'Track number', 'Composer',
+                               'Release Date', 'Track number', 'Composer',
                                'Publisher', 'Track Length', 'Bitrate']
 
         for k in valid_metadata_keys:
             if k not in metadata or not metadata[k]:
                 metadata[k] = 'Unknown'
+            else:
+                print(metadata[k])
 
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
 
         insert_query = """
-        INSERT INTO song_properties (id, file_name, title, artist, album, genre, release_year, track_num, composer, publisher, track_length, bitrate)
+        INSERT INTO song_properties (id, file_name, title, artist, album, genre, release_date, track_num, composer, publisher, track_length, bitrate)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
+        print("METADATA DE TITLEEEE:", metadata['Title'])
         cursor.execute(insert_query, (
             str(uuid.uuid4()),
             file_name,
@@ -90,7 +92,7 @@ def Add_song(song_path, metadata):
             metadata['Artist'],
             metadata['Album'],
             metadata['Genre'],
-            metadata['Release Year'],
+            metadata['Release Date'],
             metadata['Track number'],
             metadata['Composer'],
             metadata['Publisher'],
@@ -98,13 +100,12 @@ def Add_song(song_path, metadata):
             metadata['Bitrate']
         ))
 
-        print(f"Metadata for '{file_name}' inserted into the database")
-
         with open(song_path, 'rb') as source, open(destination_path, 'wb') as destination:
             for chunk in iter(lambda: source.read(4096), b''):
                 destination.write(chunk)
 
-        print(f"Song '{file_name}' has been successfully added to Storage.")
+        # song_id = cursor.fetchone()[0]
+        print(f"'{file_name}' was inserted into the database and was added to the storage.\n\n")
 
     except FileNotFoundError:
         print("File not found. Please provide a valid file path.")
@@ -138,7 +139,8 @@ def Delete_song(song_id):
 def Modify_data(song_id, metadata):
     try:
         valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
-                               'Release Year', 'Composer', 'Publisher']
+                               'Release Date', 'Track number', 'Composer',
+                               'Publisher', 'Track Length', 'Bitrate']
 
         invalid_keys = [key for key in metadata.keys() if key not in valid_metadata_keys]
         if invalid_keys:
@@ -159,9 +161,13 @@ def Modify_data(song_id, metadata):
                 artist = COALESCE(%s, artist),
                 album = COALESCE(%s, album),
                 genre = COALESCE(%s, genre),
-                release_year = COALESCE(%s, release_year),
+                release_date = COALESCE(%s, release_date),
+                track_num = COALESCE(%s, track_num),
                 composer = COALESCE(%s, composer),
-                publisher = COALESCE(%s, publisher)
+                publisher = COALESCE(%s, publisher),
+                track_length = COALESCE(%s, track_length),
+                bitrate = COALESCE(%s, bitrate)
+
             WHERE id = %s
             """
 
@@ -170,9 +176,12 @@ def Modify_data(song_id, metadata):
                 metadata.get('Artist', existing_metadata[3]),
                 metadata.get('Album', existing_metadata[4]),
                 metadata.get('Genre', existing_metadata[5]),
-                metadata.get('Release Year', existing_metadata[6]),
+                metadata.get('Release Date', existing_metadata[6]),
+                metadata.get('Track number', existing_metadata[7]),
                 metadata.get('Composer', existing_metadata[8]),
                 metadata.get('Publisher', existing_metadata[9]),
+                metadata.get('Track Length', existing_metadata[10]),
+                metadata.get('Bitrate', existing_metadata[11]),
                 song_id
             ))
 
@@ -180,13 +189,6 @@ def Modify_data(song_id, metadata):
 
             song_path_query = "SELECT file_name FROM song_properties WHERE id = %s"
             cursor.execute(song_path_query, (song_id,))
-            song_path = os.path.join("Storage", cursor.fetchone()[0])
-
-            audio = EasyID3(song_path)
-            for key, value in metadata.items():
-                if key in audio:
-                    audio[key] = value
-            audio.save()
 
             print(f"Song metadata updated for song with id {song_id}")
         else:

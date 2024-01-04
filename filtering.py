@@ -1,6 +1,6 @@
 import psycopg2
 import zipfile
-import os
+import utils
 from crud import DatabaseSingleton
 
 
@@ -9,16 +9,18 @@ def Search(filters):
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
 
-        search_query = ("SELECT file_name, title, artist, album, genre, release_year, track_num, composer, "
+        search_query = ("SELECT file_name, title, artist, album, genre, release_date, track_num, composer, "
                         "publisher, track_length, bitrate FROM song_properties WHERE ")
         conditions = []
 
+        filters = {key: value for key, value in filters.items() if value is not None}
+
         for key, value in filters.items():
-            conditions.append(f"{key.lower()} ILIKE %s")
+            conditions.append(f"{utils.transform_to_snake_case(key)} ILIKE %s")
             cursor.execute(
                 "SELECT column_name FROM information_schema.columns WHERE table_name = 'song_properties' AND "
                 "column_name = %s",
-                (key.lower(),))
+                (utils.transform_to_snake_case(key),))
 
             column_exists = cursor.fetchone()
             if not column_exists:
@@ -27,10 +29,14 @@ def Search(filters):
 
         search_query += " AND ".join(conditions)
 
-        filters_values = [v.lower() if isinstance(v, str) else v for v in filters.values()]
+        filters_values = [v for v in filters.values()]
+
+        print('FILTERS VALUES', filters_values)
         cursor.execute(search_query, tuple(filters_values))
 
         songs_found = cursor.fetchall()
+
+        print("SONGS FOUND", songs_found)
 
         if songs_found:
             print("Matching songs found:")
@@ -58,7 +64,7 @@ def Create_save_list(output_folder, filters):
             with zipfile.ZipFile(output_folder, 'w') as zip_file:
                 for song in songs_found:
                     file_name = song[0]
-                    source_path = os.path.join("Storage", file_name)
+                    source_path = 'Storage/' + file_name
 
                     try:
                         zip_file.write(source_path, arcname=file_name)
@@ -66,7 +72,7 @@ def Create_save_list(output_folder, filters):
                     except FileNotFoundError:
                         print(f"File not found.")
 
-            print("Zip archive created!")
+            print("Archive created!")
         else:
             print("No songs found for your search filters.")
 

@@ -1,100 +1,137 @@
 import os
-import pygame
-from mutagen.easyid3 import EasyID3
-from mutagen.mp3 import MP3
-from math import floor
 import crud
 import filtering
+import utils
 
 
-def seconds_to_minutes(audio_tag_length):
-    audio_tag_length = int(round(float(audio_tag_length)))
-    minutes = floor(audio_tag_length / 60)
-    seconds = audio_tag_length - minutes * 60
-
-    return f'{minutes:02d}:{seconds:02d}'
-
-
-def get_song_metadata(file_path):
-    try:
-        audio = EasyID3(file_path)
-        title, album, artist, genre, composer, publisher = (audio.get(key, [''])[0] for key in
-                                                            ['title', 'album', 'artist', 'genre', 'composer',
-                                                             'publisher'])
-        year = audio.get('date', [''])[0].split('-')[0]
-
-        audio_tags = MP3(file_path)
-        track_number = str(audio_tags.tags.get('TRCK', [''])[0])
-        length = seconds_to_minutes(audio_tags.info.length)
-        bitrate = str(floor(audio_tags.info.bitrate / 1000)) + 'kbs'
-
-        return {
-            'Title': title,
-            'Artist': artist,
-            'Album': album,
-            'Genre': genre,
-            'Release Year': year,
-            'Track number': track_number,
-            'Composer': composer,
-            'Publisher': publisher,
-            'Track Length': length,
-            'Bitrate': bitrate
-        }
-    except Exception as e:
-        print(f"Error: {e}")
+def display_menu():
+    print("Welcome to SongStorage!")
+    print("These are the available functionalities:")
+    print("--*-- 1 --*--. Add Song")
+    print("--*-- 2 --*--. Delete Song")
+    print("--*-- 3 --*--. Modify data")
+    print("--*-- 4 --*--. Search")
+    print("--*-- 5 --*--. Create Save List")
+    print("--*-- 6 --*--. Play")
+    print("--*-- 7 --*--. Exit")
+    return input("Please enter your choice (1-7): ")
 
 
-def Play(song_name):
-    song_path = 'Storage/' + song_name
+def add_song():
+    dbconnection = crud.DatabaseSingleton()
+    conn = dbconnection.get_connection()
+
+    song_path = input("Enter the path of the song file: ")
+
+    print("Please enter the following metadata for the song:")
+
+    user_input = utils.get_mapped_inputs()
+
+    if song_path.split('.')[1] == 'mp3':
+        song_metadata = utils.read_id3_metadata(song_path)
+        attributes_to_check = ['Title', 'Artist', 'Release Date', 'Track number', 'Album']
+
+        for attribute in attributes_to_check:
+            if attribute in user_input and attribute in song_metadata:
+                user_input[attribute] = user_input[attribute] or song_metadata[attribute]
+
+        for key, value in song_metadata.items():
+            if key not in user_input:
+                user_input[key] = value
+
+    print("USSERRR INPUTT", user_input)
+    crud.Add_song(song_path, user_input)
+
+    conn.commit()
+    conn.close()
+
+
+def delete_song():
+    dbconnection = crud.DatabaseSingleton()
+    conn = dbconnection.get_connection()
+
+    song_id = input("Enter Song ID: ")
+    crud.Delete_song(song_id)
+
+    conn.commit()
+    conn.close()
+
+
+def modify_data():
+    dbconnection = crud.DatabaseSingleton()
+    conn = dbconnection.get_connection()
+
+    song_id = input("Enter Song ID: ")
+
+    print("Metadata to change:")
+    user_input = utils.get_mapped_inputs()
+
+    crud.Modify_data(song_id, user_input)
+
+    conn.commit()
+    conn.close()
+
+
+def search():
+    dbconnection = crud.DatabaseSingleton()
+    conn = dbconnection.get_connection()
+
+    print("Fill the filters you want:")
+
+    user_input = utils.get_mapped_inputs()
+    filtering.Search(user_input)
+
+    conn.commit()
+    conn.close()
+
+
+def create_savelist():
+    dbconnection = crud.DatabaseSingleton()
+    conn = dbconnection.get_connection()
+
+    output_path = input("Enter the output path for the savelist: ")
+    user_input = utils.get_mapped_inputs()
+
+    filtering.Create_save_list(output_path, user_input)
+
+    conn.commit()
+    conn.close()
+
+
+def play():
+    song_name = input("Enter the name of the song: ")
+
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    song_path = current_path + '/Storage/' + song_name
 
     if not os.path.exists(song_path):
-        print(f"Error: '{song_name}' not found in Storage")
+        print(f"'{song_name}' not found in Storage")
         return
 
-    pygame.init()
-    pygame.mixer.init()
-
     try:
-        pygame.mixer.music.load(song_path)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
-
-    except pygame.error as e:
+        os.startfile(song_path)
+    except OSError as e:
         print(f"Error in Play: {e}")
 
 
 if __name__ == '__main__':
-    dbconnection = crud.DatabaseSingleton()
-    conn = dbconnection.get_connection()
-    cursor = dbconnection.get_cursor()
-    # crud.create_song_properties_table(cursor)
+    while True:
+        choice = display_menu()
 
-    song_path = 'C:/Users/tudor/Downloads/BruteForce.mp3'
-
-    metadata1 = get_song_metadata(song_path)
-    crud.Add_song(song_path, metadata1)
-
-    # crud.Delete_song("2c6f1225-353b-41e7-857e-44a5c9bc8b5c")
-
-    # update_metadata = {
-    #     'Title': 'Liber',
-    #     'Artist': 'Keo',
-    #     'Album': 'Nu stiu',
-    #     'Genre': 'Pop',
-    #     'Release Year': '2011',
-    #     'Composer': 'Keo',
-    #     'Publisher': 'Keo',
-    # }
-    # crud.Modify_data("29f0a460-e2b7-4953-8056-e21f542a3d8b", update_metadata)
-
-    search_dict = {
-        'Genre': 'Electronic'
-    }
-    filtering.Search(search_dict)
-
-    # filtering.Create_save_list('D:/pp_output/electronic_playlist.zip', search_dict)
-    conn.commit()
-    conn.close()
-
-    Play('BruteForce.mp3')
+        if choice == '1':
+            add_song()
+        elif choice == '2':
+            delete_song()
+        elif choice == '3':
+            modify_data()
+        elif choice == '4':
+            search()
+        elif choice == '5':
+            create_savelist()
+        elif choice == '6':
+            play()
+        elif choice == '7':
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please enter a number between 1 and 6.")
