@@ -1,6 +1,7 @@
 import psycopg2
 import os
 import uuid
+import utils
 
 
 class DatabaseSingleton:
@@ -188,6 +189,12 @@ def Modify_data(song_id, metadata):
 
             song_path_query = "SELECT file_name FROM song_properties WHERE id = %s"
             cursor.execute(song_path_query, (song_id,))
+
+            song_path = os.path.join("Storage", cursor.fetchone()[0])
+
+            for tag in ['Title', 'Artist', 'Album', 'Track number', 'Release Date']:
+                if tag in metadata and metadata[tag] is not None:
+                    utils.modify_id3_metadata(song_path, tag, metadata[tag])
 
             print(f"Song metadata updated for song with id {song_id}")
         else:

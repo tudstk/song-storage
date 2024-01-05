@@ -3,6 +3,14 @@ import re
 
 
 def clean_metadata(metadata):
+    """ Removes unnecessary (0x00) and (0x03) characters from metadata values.
+
+        Args:
+        metadata (dict): Dictionary containing metadata dictionary
+
+        Returns:
+        dict: Cleaned metadata dictionary.
+        """
     cleaned_metadata = {}
     for key, value in metadata.items():
         cleaned_value = value.strip('\x00\x03')
@@ -11,6 +19,20 @@ def clean_metadata(metadata):
 
 
 def read_id3_metadata(file_path):
+    """Read ID3 (v2) metadata from an audio file.
+
+        Reads 128 bytes (file header for tags) of ID3 metadata from the beginning of an audio file,
+        extracts specific frame IDs if present, and stores the metadata if user didn't provide any.This is done by
+        reading ID3 tag frames (4 bytes representing the frame identifier, 4 bytes representing the size,
+        followed the actual content).
+
+        Args:
+        file_path (str): Path to the song.
+
+        Returns:
+        dict: Extracted ID3 metadata dictionary.
+        """
+
     metadata = {}
 
     with open(file_path, 'rb') as file:
@@ -41,12 +63,35 @@ def read_id3_metadata(file_path):
 
 
 def transform_to_snake_case(text):
+    """Convert a text string to snake_case.
+
+        Replaces spaces with underscores ensuring all characters are in lowercase. This is helpful to convert
+        input identifiers (e.g. Release date) to database columns (release_date).
+
+        Args:
+        text (str): The text string to be converted.
+
+        Returns:
+        str: The text string converted to snake_case.
+        """
     return '_'.join(text.lower().split())
 
 
 def validate_input(field):
+    """Validate user input based on the specified field.
+
+       Asks the user for input, validates that it's empty, and
+       for specific fields like 'Release Date', 'Track number', and 'Track Length',
+       it performs additional validation through specialized functions.
+
+       Args:
+       field (str): The field for which the input is being validated.
+
+       Returns:
+       str or None: The validated user input or None if the input is invalid or empty.
+       """
     while True:
-        user_input = input(f"Enter {field}: ").strip()
+        user_input = input(f"{field}: ").strip()
         if not user_input:
             return None
         if field == 'Release Date':
@@ -64,6 +109,20 @@ def validate_input(field):
 
 
 def validate_date(date):
+    """Validate and format a date string based on accepted formats.
+
+       Validates the provided date string by checking if they belong to some specific formats
+       ("dd-mm-YYYY", "mn-YYYY", "YYYY") and returns a formatted date string if it matches
+       any of the those. If the input date is None or doesn't match any accepted
+       format, it returns None.
+
+       Args:
+       date (str): The date string to be validated.
+
+       Returns:
+       str or None: The formatted date string if valid, or None if the input is invalid.
+       """
+
     if date is None:
         return None
     date_formats = ["%d-%m-%Y", "%m-%Y", "%Y"]
@@ -78,6 +137,19 @@ def validate_date(date):
 
 
 def validate_track_number(track_number):
+    """Validate the track number and ensure it falls within a specified range.
+
+        Validates the provided track number by attempting to convert it to an integer.
+        If it's a valid integer within the range of 1 to 30 (inclusive), it returns the
+        track number as a string. If the input is None or not a valid integer or
+        falls outside the specified range, it returns None.
+
+        Args:
+        track_number (str): The track number to be validated.
+
+        Returns:
+        str or None: The validated track number as a string or None if invalid.
+        """
     if track_number is None:
         return None
 
@@ -118,3 +190,52 @@ def get_mapped_inputs():
     user_input.update(tags)
 
     return user_input
+
+
+def modify_id3_metadata(file_path, tag, new_value):
+    """Modify a specific ID3 (v2) metadata tag in an audio file.
+
+    Modifies a specific frame ID with a new value provided and includes an ETX character before the content.
+
+    Args:
+    file_path (str): Path to the song.
+    new_value (str): New value to update in the specified tag.
+    tag (str): Tag identifier for the metadata field to modify (e.g., 'Title', 'Artist', 'Release Date', 'Track number', 'Album').
+
+    Returns:
+    bool: True if metadata was successfully modified, False otherwise.
+    """
+
+    frame_ids = {
+        'Title': b'TIT2',
+        'Artist': b'TPE1',
+        'Release Date': b'TYER',
+        'Track number': b'TRCK',
+        'Album': b'TALB'
+    }
+
+    with open(file_path, 'r+b') as file:
+        id3_data = file.read(128)
+
+        if id3_data.startswith(b'ID3'):
+            i = 10
+            j = i + 10
+            while j < 128:
+                frame_id = id3_data[i:i + 4]
+                frame_size = int.from_bytes(id3_data[i + 4:i + 8])
+                if frame_id in frame_ids.values():
+                    if tag in frame_ids.keys() and frame_ids[tag] == frame_id:
+                        new_value = '\x03' + new_value
+                        new_value = new_value.encode('utf-8')
+                        if len(new_value) > frame_size:
+                            frame_size = len(new_value)
+                            file.seek(i + 4)
+                            file.write(frame_size.to_bytes(4))
+                        file.seek(j)
+                        file.write(new_value.ljust(frame_size, b'\x00'))
+                        return True
+                i += 10 + frame_size
+                j = i + 10
+
+    return False
+
