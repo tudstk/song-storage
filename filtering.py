@@ -5,6 +5,18 @@ from crud import DatabaseSingleton
 
 
 def Search(filters):
+    """Searches for songs in the database based on given filters.
+
+        This function searches in the 'song_properties' table of the database using the given filters.
+        It constructs a SQL query based on the provided filters and retrieves songs that match user's search filters.
+
+        Args:
+        filters (dict): A dictionary containing filters for searching song properties.
+
+        Returns:
+        list or None: A list of songs found in the database that match the provided filters, or None if no matches
+         are found.
+        """
     try:
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
@@ -56,6 +68,16 @@ def Search(filters):
 
 
 def Create_save_list(output_folder, filters):
+    """Creates and saves a playlist of songs matching filters specified by user into a ZIP archive.
+
+      This function creates a playlist by searching for songs in the database based on the provided filters
+      using 'Search' function.
+      It then generates a ZIP archive containing the found songs and saves it to the specified output folder.
+
+      Args:
+      output_folder (str): The directory path where the playlist ZIP archive will be saved.
+      filters (dict): A dictionary containing filters for searching song properties.
+      """
     try:
         songs_found = Search(filters)
 

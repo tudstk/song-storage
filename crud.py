@@ -35,6 +35,17 @@ class DatabaseSingleton:
 
 
 def create_song_properties_table(cursor):
+    """Creates the 'song_properties' table if it does not exist.
+
+        This function attempts to create the 'song_properties' table in the database with the specified columns.
+        If the table already exists, it won't be recreated.
+
+        Args:
+        cursor: Database cursor object used to execute SQL queries.
+
+        Returns:
+        None
+        """
     try:
         create_table_query = """
         CREATE TABLE IF NOT EXISTS song_properties (
@@ -59,6 +70,21 @@ def create_song_properties_table(cursor):
 
 
 def Add_song(song_path, metadata):
+    """Adds a song file to storage and its metadata to the database.
+
+        Creates a 'Storage' directory if it doesn't exist and saves the song file there.
+        Validates and check what metadata fields were completed by the user in the provided metadata. The metadata
+        that wasn't filled, will be marked as Unknown in the database.
+        Inserts the song metadata into the 'song_properties' table in the database.
+
+        Args:
+        song_path (str): The file path of the song.
+        metadata (dict): A dictionary containing song metadata with keys for 'Title', 'Artist', 'Album', 'Genre',
+                         'Release Date', 'Track number', 'Composer', 'Publisher', 'Track Length', and 'Bitrate'.
+
+        Returns:
+        None
+        """
     if not os.path.exists("Storage"):
         os.makedirs("Storage")
 
@@ -116,6 +142,19 @@ def Add_song(song_path, metadata):
 
 
 def Delete_song(song_id):
+    """Deletes a song from the database and its associated file from storage.
+
+       This function takes a song ID as input and checks the 'song_properties' table in the database for the song with
+        the provided ID. If the song exists, it deletes the entry from the table and removes the associated file
+        from the 'Storage' directory.
+        If no song is found with the provided ID, it prints an error message.
+
+       Args:
+       song_id (str): The unique identifier of the song to be deleted.
+
+       Returns:
+       None
+       """
     try:
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
@@ -139,6 +178,19 @@ def Delete_song(song_id):
 
 
 def Modify_data(song_id, metadata):
+    """Modifies metadata for a song entry in the database and associated file.
+
+        Updates metadata for a song in the database and file properties, corresponding to the provided song ID.
+
+        Retrieves existing metadata from the database for the given song ID.Updates the corresponding metadata
+        fields in the database based on the provided metadata. Utilizes 'modify_id3_metadata' to update ID3
+        tags in the associated song file, if applicable.
+
+        Args:
+        song_id (str): The id of the song whose metadata will be modified.
+        metadata (dict): A dictionary containing updated metadata for the song.
+
+        """
     try:
         valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
                                'Release Date', 'Track number', 'Composer',
