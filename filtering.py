@@ -61,7 +61,7 @@ def Create_save_list(output_folder, filters):
 
         if songs_found:
 
-            with zipfile.ZipFile(output_folder, 'w') as zip_file:
+            with zipfile.ZipFile(output_folder + "/playlist.zip", 'w') as zip_file:
                 for song in songs_found:
                     file_name = song[0]
                     source_path = 'Storage/' + file_name

@@ -84,9 +84,11 @@ def Add_song(song_path, metadata):
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
+        song_id = str(uuid.uuid4())
+
         print("METADATA DE TITLEEEE:", metadata['Title'])
         cursor.execute(insert_query, (
-            str(uuid.uuid4()),
+            song_id,
             file_name,
             metadata['Title'],
             metadata['Artist'],
@@ -104,8 +106,7 @@ def Add_song(song_path, metadata):
             for chunk in iter(lambda: source.read(4096), b''):
                 destination.write(chunk)
 
-        # song_id = cursor.fetchone()[0]
-        print(f"'{file_name}' was inserted into the database and was added to the storage.\n\n")
+        print(f"'{file_name}' was inserted into the database with id {song_id}, and was added to the storage.\n\n")
 
     except FileNotFoundError:
         print("File not found. Please provide a valid file path.")
@@ -184,8 +185,6 @@ def Modify_data(song_id, metadata):
                 metadata.get('Bitrate', existing_metadata[11]),
                 song_id
             ))
-
-            print(f"Metadata updated for song with id {song_id}")
 
             song_path_query = "SELECT file_name FROM song_properties WHERE id = %s"
             cursor.execute(song_path_query, (song_id,))

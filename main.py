@@ -18,9 +18,6 @@ def display_menu():
 
 
 def add_song():
-    dbconnection = crud.DatabaseSingleton()
-    conn = dbconnection.get_connection()
-
     song_path = input("Enter the path of the song file: ")
 
     print("Please enter the following metadata for the song:")
@@ -42,25 +39,13 @@ def add_song():
     print("USSERRR INPUTT", user_input)
     crud.Add_song(song_path, user_input)
 
-    conn.commit()
-    conn.close()
-
 
 def delete_song():
-    dbconnection = crud.DatabaseSingleton()
-    conn = dbconnection.get_connection()
-
     song_id = input("Enter Song ID: ")
     crud.Delete_song(song_id)
 
-    conn.commit()
-    conn.close()
-
 
 def modify_data():
-    dbconnection = crud.DatabaseSingleton()
-    conn = dbconnection.get_connection()
-
     song_id = input("Enter Song ID: ")
 
     print("Metadata to change:")
@@ -68,34 +53,19 @@ def modify_data():
 
     crud.Modify_data(song_id, user_input)
 
-    conn.commit()
-    conn.close()
-
 
 def search():
-    dbconnection = crud.DatabaseSingleton()
-    conn = dbconnection.get_connection()
-
     print("Fill the filters you want:")
 
     user_input = utils.get_mapped_inputs()
     filtering.Search(user_input)
 
-    conn.commit()
-    conn.close()
-
 
 def create_savelist():
-    dbconnection = crud.DatabaseSingleton()
-    conn = dbconnection.get_connection()
-
     output_path = input("Enter the output path for the savelist: ")
     user_input = utils.get_mapped_inputs()
 
     filtering.Create_save_list(output_path, user_input)
-
-    conn.commit()
-    conn.close()
 
 
 def play():
@@ -115,23 +85,33 @@ def play():
 
 
 if __name__ == '__main__':
+
+    dbconnection = crud.DatabaseSingleton()
+    conn = dbconnection.get_connection()
+
     while True:
         choice = display_menu()
 
         if choice == '1':
             add_song()
+            conn.commit()
         elif choice == '2':
             delete_song()
+            conn.commit()
         elif choice == '3':
             modify_data()
+            conn.commit()
         elif choice == '4':
             search()
+            conn.commit()
         elif choice == '5':
             create_savelist()
+            conn.commit()
         elif choice == '6':
             play()
         elif choice == '7':
-            print("Exiting...")
+            print("Goodbye!")
+            conn.close()
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 6.")
+            print("Please enter a number between 1 and 7.")
