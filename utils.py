@@ -139,10 +139,10 @@ def validate_date(date):
 def validate_track_number(track_number):
     """Validate the track number and ensure it falls within a specified range.
 
-        Validates the provided track number by attempting to convert it to an integer.
-        If it's a valid integer within the range of 1 to 30 (inclusive), it returns the
+        Validates the provided track number by trying to convert it to an integer.
+        If it's a valid integer in the range 1 - 30 (inclusive), it returns the
         track number as a string. If the input is None or not a valid integer or
-        falls outside the specified range, it returns None.
+        is not in the specific range, it returns None.
 
         Args:
         track_number (str): The track number to be validated.
@@ -163,6 +163,16 @@ def validate_track_number(track_number):
 
 
 def validate_track_length(track_length):
+    """Validates the format of a track length in the 'mm:ss' (minutes:seconds) format.
+
+       Args:
+       track_length (str or None): A string representing the track length in 'mm:ss' format.
+                                   If None, it represents unknown track length.
+
+       Returns:
+       str or None: Returns the validated track length if it matches the expected format.
+                    If the input is None or doesn't match the 'mm:ss' pattern, returns None.
+       """
     if track_length is None:
         return None
 
@@ -173,6 +183,15 @@ def validate_track_length(track_length):
 
 
 def get_mapped_inputs():
+    """Gets and validates user inputs for main metadata and tags.
+
+       This function collects user inputs for main metadata (Title, Artist, Album, Release Date, Track number)
+       and tags (Genre, Composer, Publisher, Track Length, Bitrate). Dates, track numbers, and track lengths
+       are validated specifically to match their expected formats.
+
+       Returns:
+       dict: A dictionary containing validated user inputs for main metadata and tags.
+       """
     print("\nMAIN METADATA:\n")
     main_metadata = ['Title', 'Artist', 'Album', 'Release Date', 'Track number']
     main_inputs = {field: validate_input(field) for field in main_metadata}
@@ -195,12 +214,11 @@ def get_mapped_inputs():
 def modify_id3_metadata(file_path, tag, new_value):
     """Modify a specific ID3 (v2) metadata tag in an audio file.
 
-    Modifies a specific frame ID with a new value provided and includes an ETX character before the content.
+    Modifies a specific frame ID with a new value provided and includes an ETX character before the content (to mark
+    the end of a previous content).
 
-    Args:
-    file_path (str): Path to the song.
-    new_value (str): New value to update in the specified tag.
-    tag (str): Tag identifier for the metadata field to modify (e.g., 'Title', 'Artist', 'Release Date', 'Track number', 'Album').
+    Args: file_path (str): Path to the song. new_value (str): New value to update in the specified tag. tag (str):
+    Tag identifier for the metadata field to modify (e.g., 'Title', 'Artist', 'Release Date', 'Track number', 'Album').
 
     Returns:
     bool: True if metadata was successfully modified, False otherwise.
