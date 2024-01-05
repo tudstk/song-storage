@@ -33,7 +33,16 @@ def add_song():
     It uses the Add_song function to perform the effective operations.
 
     """
+    valid_extensions = ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg', '.aff']
     song_path = input("Enter the path of the song file: ")
+    if not os.path.exists(song_path):
+        print("File does not exist.")
+        return
+
+    file_extension = os.path.splitext(song_path)[1]
+    if file_extension not in valid_extensions:
+        print(f'Invalid audio file format. Supported formats: {valid_extensions}')
+        return
 
     print("Please enter the following metadata for the song:")
 
@@ -51,7 +60,7 @@ def add_song():
             if key not in user_input:
                 user_input[key] = value
 
-    print("USSERRR INPUTT", user_input)
+    print("USER INPUT", user_input)
     crud.Add_song(song_path, user_input)
 
 
