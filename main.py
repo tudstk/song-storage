@@ -109,6 +109,8 @@ if __name__ == '__main__':
 
     dbconnection = crud.DatabaseSingleton()
     conn = dbconnection.get_connection()
+    cursor = conn.cursor()
+    crud.create_song_properties_table(cursor)
 
     while True:
         choice = display_menu()

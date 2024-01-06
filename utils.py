@@ -157,7 +157,7 @@ def get_mapped_inputs():
     main_inputs['Track number'] = validate_track_number(main_inputs['Track number'])
 
     print("\nTAGS:\n")
-    tags = ['Genre', 'Composer', 'Publisher', 'Track Length', 'Bitrate']
+    tags = ['Genre', 'Composer', 'Publisher', 'Track Length', 'File Format']
     tags = {field: validate_input(field) for field in tags}
 
     tags['Track Length'] = validate_track_length(tags['Track Length'])

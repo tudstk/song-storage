@@ -54,7 +54,7 @@ def create_song_properties_table(cursor):
             composer VARCHAR(255),
             publisher VARCHAR(255),
             track_length VARCHAR(255),
-            bitrate VARCHAR(255)
+            file_format VARCHAR(255)
         );
         """
         cursor.execute(create_table_query)
@@ -80,7 +80,7 @@ def Add_song(song_path, metadata):
 
         valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
                                'Release Date', 'Track number', 'Composer',
-                               'Publisher', 'Track Length', 'Bitrate']
+                               'Publisher', 'Track Length']
 
         for k in valid_metadata_keys:
             if k not in metadata or not metadata[k]:
@@ -92,14 +92,14 @@ def Add_song(song_path, metadata):
         cursor = db_connection.get_cursor()
 
         insert_query = """
-        INSERT INTO song_properties (id, file_name, title, artist, album, genre, release_date, track_num, composer, publisher, track_length, bitrate)
+        INSERT INTO song_properties (id, file_name, title, artist, album, genre, release_date, track_num, composer, publisher, track_length, file_format)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
         song_id = str(uuid.uuid4())
 
         print("METADATA DE TITLEEEE:", metadata['Title'])
-
+        file_extension = os.path.splitext(file_name)[1]
         # add the metadata in the database
         cursor.execute(insert_query, (
             song_id,
@@ -113,7 +113,7 @@ def Add_song(song_path, metadata):
             metadata['Composer'],
             metadata['Publisher'],
             metadata['Track Length'],
-            metadata['Bitrate']
+            file_extension
         ))
 
         # add the file to the storage

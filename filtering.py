@@ -16,7 +16,7 @@ def Search(filters):
         cursor = db_connection.get_cursor()
 
         search_query = ("SELECT file_name, title, artist, album, genre, release_date, track_num, composer, "
-                        "publisher, track_length, bitrate FROM song_properties WHERE ")
+                        "publisher, track_length, file_format FROM song_properties WHERE ")
         conditions = []
 
         filters = {key: value for key, value in filters.items() if value is not None}
@@ -28,7 +28,6 @@ def Search(filters):
                 "SELECT column_name FROM information_schema.columns WHERE table_name = 'song_properties' AND "
                 "column_name = %s",
                 (utils.transform_to_snake_case(key),))
-
             column_exists = cursor.fetchone()
             if not column_exists:
                 print(f"Column '{key}' does not exist in the database.")
