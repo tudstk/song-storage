@@ -5,18 +5,12 @@ from crud import DatabaseSingleton
 
 
 def Search(filters):
-    """Searches for songs in the database based on given filters.
+    """Searches for songs in the database based on given filters and returns a list of the songs found or None if
+    there are no songs matching the filters.
 
-        This function searches in the 'song_properties' table of the database using the given filters.
-        It constructs a SQL query based on the provided filters and retrieves songs that match user's search filters.
-
-        Args:
-        filters (dict): A dictionary containing filters for searching song properties.
-
-        Returns:
-        list or None: A list of songs found in the database that match the provided filters, or None if no matches
-         are found.
-        """
+    Args:
+    filters (dict) -- a dictionary containing (tag:value) filters for searching song properties.
+    """
     try:
         db_connection = DatabaseSingleton()
         cursor = db_connection.get_cursor()
@@ -27,6 +21,7 @@ def Search(filters):
 
         filters = {key: value for key, value in filters.items() if value is not None}
 
+        # build a query by taking each filter tag and checking the corresponding database column
         for key, value in filters.items():
             conditions.append(f"{utils.transform_to_snake_case(key)} ILIKE %s")
             cursor.execute(
@@ -68,16 +63,13 @@ def Search(filters):
 
 
 def Create_save_list(output_folder, filters):
-    """Creates and saves a playlist of songs matching filters specified by user into a ZIP archive.
+    """Creates a savelist of songs matching filters specified by user and saves it into a ZIP archive on a
+        specified path provided by the user.
 
-      This function creates a playlist by searching for songs in the database based on the provided filters
-      using 'Search' function.
-      It then generates a ZIP archive containing the found songs and saves it to the specified output folder.
-
-      Args:
-      output_folder (str): The directory path where the playlist ZIP archive will be saved.
-      filters (dict): A dictionary containing filters for searching song properties.
-      """
+    Args:
+    output_folder (str) -- the directory path where the savelist will be saved.
+    filters (dict) -- a dictionary containing filters for searching song properties.
+    """
     try:
         songs_found = Search(filters)
 

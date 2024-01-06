@@ -3,14 +3,11 @@ import re
 
 
 def clean_metadata(metadata):
-    """ Removes unnecessary (0x00) and (0x03) characters from metadata values.
+    """ Removes unnecessary (0x00) and (0x03) characters from metadata values and returns the clean metadata.
 
-        Args:
-        metadata (dict): Dictionary containing metadata dictionary
-
-        Returns:
-        dict: Cleaned metadata dictionary.
-        """
+    Args:
+    metadata (dict) -- dictionary containing metadata with useless characters.
+    """
     cleaned_metadata = {}
     for key, value in metadata.items():
         cleaned_value = value.strip('\x00\x03')
@@ -19,19 +16,11 @@ def clean_metadata(metadata):
 
 
 def read_id3_metadata(file_path):
-    """Read ID3 (v2) metadata from an audio file.
+    """Read ID3 (v2) metadata from an audio file and returns the extracted metadata from file
 
-        Reads 128 bytes (file header for tags) of ID3 metadata from the beginning of an audio file,
-        extracts specific frame IDs if present, and stores the metadata if user didn't provide any.This is done by
-        reading ID3 tag frames (4 bytes representing the frame identifier, 4 bytes representing the size,
-        followed the actual content).
-
-        Args:
-        file_path (str): Path to the song.
-
-        Returns:
-        dict: Extracted ID3 metadata dictionary.
-        """
+    Args:
+    file_path (str) -- path to the song.
+    """
 
     metadata = {}
 
@@ -46,14 +35,18 @@ def read_id3_metadata(file_path):
             b'TRCK': 'Track number',
             b'TALB': 'Album'
         }
-
+        # a frame has 10 bytez
         i = 10
         j = i + 10
+
+        # tags are placed in the first 128 bytes of the file
         while j < 128:
             frame_id = id3_data[i:i + 4]
+            # first 4 bytes of a frame store the tag and the next 4 store the size of the actual content
             frame_size = int.from_bytes(id3_data[i + 4:i + 8])
             if frame_id in frame_ids:
                 frame_name = frame_ids[frame_id]
+                # so after getting the size, I have to read that specific number of bytes to get the content
                 frame_content = id3_data[j:j + frame_size].decode('utf-8')
                 metadata[frame_name] = frame_content
             i += 10 + frame_size
@@ -63,33 +56,21 @@ def read_id3_metadata(file_path):
 
 
 def transform_to_snake_case(text):
-    """Convert a text string to snake_case.
+    """Convert a text string to snake_case and returns it
 
-        Replaces spaces with underscores ensuring all characters are in lowercase. This is helpful to convert
-        input identifiers (e.g. Release date) to database columns (release_date).
-
-        Args:
-        text (str): The text string to be converted.
-
-        Returns:
-        str: The text string converted to snake_case.
-        """
+    Args:
+    text (str): The text string to be converted.
+    """
     return '_'.join(text.lower().split())
 
 
 def validate_input(field):
-    """Validate user input based on the specified field.
+    """Validate user input based on the specified field and return the validated input if the user has provided
+    the specific input, else return none.
 
-       Asks the user for input, validates that it's empty, and
-       for specific fields like 'Release Date', 'Track number', and 'Track Length',
-       it performs additional validation through specialized functions.
-
-       Args:
-       field (str): The field for which the input is being validated.
-
-       Returns:
-       str or None: The validated user input or None if the input is invalid or empty.
-       """
+    Args:
+    field (str): The field for which the input is being validated.
+    """
     while True:
         user_input = input(f"{field}: ").strip()
         if not user_input:
@@ -109,19 +90,11 @@ def validate_input(field):
 
 
 def validate_date(date):
-    """Validate and format a date string based on accepted formats.
+    """Checks if date input is valid and returns the formatted date string if it's valid, else it returns None.
 
-       Validates the provided date string by checking if they belong to some specific formats
-       ("dd-mm-YYYY", "mn-YYYY", "YYYY") and returns a formatted date string if it matches
-       any of the those. If the input date is None or doesn't match any accepted
-       format, it returns None.
-
-       Args:
-       date (str): The date string to be validated.
-
-       Returns:
-       str or None: The formatted date string if valid, or None if the input is invalid.
-       """
+    Args:
+    date (str): The date string to be validated.
+    """
 
     if date is None:
         return None
@@ -130,6 +103,7 @@ def validate_date(date):
         try:
             if len(date) != len(datetime.datetime.strptime(date, fmt).strftime(fmt)):
                 continue
+            # formats the string as a date object then converts it to a string again
             return datetime.datetime.strptime(date, fmt).strftime(fmt)
         except ValueError as e:
             print(f"date format error: {e}")
@@ -137,19 +111,12 @@ def validate_date(date):
 
 
 def validate_track_number(track_number):
-    """Validate the track number and ensure it falls within a specified range.
+    """Validate the track number and ensure it is between the range (1, 30) and returns the track number as a string
+    if the validation succeeded, else it returns none.
 
-        Validates the provided track number by trying to convert it to an integer.
-        If it's a valid integer in the range 1 - 30 (inclusive), it returns the
-        track number as a string. If the input is None or not a valid integer or
-        is not in the specific range, it returns None.
-
-        Args:
-        track_number (str): The track number to be validated.
-
-        Returns:
-        str or None: The validated track number as a string or None if invalid.
-        """
+    Args:
+    track_number (str) -- The track number to be validated.
+    """
     if track_number is None:
         return None
 
@@ -163,19 +130,17 @@ def validate_track_number(track_number):
 
 
 def validate_track_length(track_length):
-    """Validates the format of a track length in the 'mm:ss' (minutes:seconds) format.
+    """Validates the format of a track length in the (minutes:seconds) format, and it returns it if it matches the
+    pattern, else it returns none.
 
-       Args:
-       track_length (str or None): A string representing the track length in 'mm:ss' format.
-                                   If None, it represents unknown track length.
-
-       Returns:
-       str or None: Returns the validated track length if it matches the expected format.
-                    If the input is None or doesn't match the 'mm:ss' pattern, returns None.
-       """
+    Args:
+    track_length (str or None) -- A string representing the track length.
+                                If None, it means that the track length will be marked as Unknown.
+    """
     if track_length is None:
         return None
 
+    # matches the (minutes:seconds) pattern where the max is 59 and 59 for each one
     pattern = re.compile(r'^([0-5][0-9]):([0-5][0-9])$')
     if pattern.match(track_length):
         return track_length
@@ -183,15 +148,7 @@ def validate_track_length(track_length):
 
 
 def get_mapped_inputs():
-    """Gets and validates user inputs for main metadata and tags.
-
-       This function collects user inputs for main metadata (Title, Artist, Album, Release Date, Track number)
-       and tags (Genre, Composer, Publisher, Track Length, Bitrate). Dates, track numbers, and track lengths
-       are validated specifically to match their expected formats.
-
-       Returns:
-       dict: A dictionary containing validated user inputs for main metadata and tags.
-       """
+    """Gets user inputs for main metadata then returns the input after validation."""
     print("\nMAIN METADATA:\n")
     main_metadata = ['Title', 'Artist', 'Album', 'Release Date', 'Track number']
     main_inputs = {field: validate_input(field) for field in main_metadata}
@@ -212,16 +169,12 @@ def get_mapped_inputs():
 
 
 def modify_id3_metadata(file_path, tag, new_value):
-    """Modify a specific ID3 (v2) metadata tag in an audio file.
+    """Modify a specific ID3 metadata tag in an audio file and returns True if the metadata was modified, else False.
 
-    Modifies a specific frame ID with a new value provided and includes an ETX character before the content (to mark
-    the end of a previous content).
-
-    Args: file_path (str): Path to the song. new_value (str): New value to update in the specified tag. tag (str):
-    Tag identifier for the metadata field to modify (e.g., 'Title', 'Artist', 'Release Date', 'Track number', 'Album').
-
-    Returns:
-    bool: True if metadata was successfully modified, False otherwise.
+    Args:
+    file_path (str) -- path to the song.
+    tag (str) -- the tag name (e.g. 'Artist', 'Genre', etc.)
+    new_value (str) -- new value to update in the specified tag
     """
 
     frame_ids = {
@@ -239,17 +192,22 @@ def modify_id3_metadata(file_path, tag, new_value):
             i = 10
             j = i + 10
             while j < 128:
+                # getting the tag name
                 frame_id = id3_data[i:i + 4]
+                # getting the tag size
                 frame_size = int.from_bytes(id3_data[i + 4:i + 8])
                 if frame_id in frame_ids.values():
+                    # if the specified tag was found, we add an RTE character to mark the end of the previous frame
                     if tag in frame_ids.keys() and frame_ids[tag] == frame_id:
                         new_value = '\x03' + new_value
                         new_value = new_value.encode('utf-8')
+                        # the tag value that I insert may be bigger than the current one, so resizing is needed
                         if len(new_value) > frame_size:
                             frame_size = len(new_value)
                             file.seek(i + 4)
                             file.write(frame_size.to_bytes(4))
                         file.seek(j)
+                        # else, if the tag value is smaller than the current one, the remaining bytes will be NULL
                         file.write(new_value.ljust(frame_size, b'\x00'))
                         return True
                 i += 10 + frame_size
