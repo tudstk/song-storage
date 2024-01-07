@@ -157,7 +157,7 @@ def get_mapped_inputs():
     main_inputs['Track number'] = validate_track_number(main_inputs['Track number'])
 
     print("\nTAGS:\n")
-    tags = ['Genre', 'Composer', 'Publisher', 'Track Length', 'File Format']
+    tags = ['Genre', 'Composer', 'Publisher', 'Track Length']
     tags = {field: validate_input(field) for field in tags}
 
     tags['Track Length'] = validate_track_length(tags['Track Length'])
@@ -168,8 +168,25 @@ def get_mapped_inputs():
     return user_input
 
 
+def get_mapped_inputs_filters():
+    """Gets user inputs for main metadata then returns the input after validation."""
+
+    print("Fill the filters you want:")
+    main_metadata_filters = ['Title', 'Artist', 'Album']
+    main_inputs_filters = {field: validate_input(field) for field in main_metadata_filters}
+
+    tags = ['Genre', 'Composer', 'Publisher', 'File Format']
+    tags = {field: validate_input(field) for field in tags}
+
+    user_input = main_inputs_filters.copy()
+    user_input.update(tags)
+
+    return user_input
+
+
 def modify_id3_metadata(file_path, tag, new_value):
-    """Modify a specific ID3 metadata tag in an audio file and returns True if the metadata was modified, else False.
+    """Modify a specific ID3 metadata tag in an audio file and returns True if the metadata was modified,
+    False otherwise.
 
     Args:
     file_path (str) -- path to the song.
@@ -197,7 +214,7 @@ def modify_id3_metadata(file_path, tag, new_value):
                 # getting the tag size
                 frame_size = int.from_bytes(id3_data[i + 4:i + 8])
                 if frame_id in frame_ids.values():
-                    # if the specified tag was found, we add an RTE character to mark the end of the previous frame
+                    # if the specified tag was found, add an RTE character to mark the end of the previous frame
                     if tag in frame_ids.keys() and frame_ids[tag] == frame_id:
                         new_value = '\x03' + new_value
                         new_value = new_value.encode('utf-8')
@@ -214,4 +231,3 @@ def modify_id3_metadata(file_path, tag, new_value):
                 j = i + 10
 
     return False
-

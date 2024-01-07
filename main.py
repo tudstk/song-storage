@@ -9,12 +9,12 @@ def display_menu():
     choice"""
     print("Welcome to SongStorage!")
     print("These are the available functionalities:")
-    print("--*-- 1 --*--. Add Song")
-    print("--*-- 2 --*--. Delete Song")
-    print("--*-- 3 --*--. Modify data")
-    print("--*-- 4 --*--. Search")
-    print("--*-- 5 --*--. Create Save List")
-    print("--*-- 6 --*--. Play")
+    print("--*-- 1 --*--. Add Song (song path, metadata)")
+    print("--*-- 2 --*--. Delete Song (song ID)")
+    print("--*-- 3 --*--. Modify data (song ID, new metadata")
+    print("--*-- 4 --*--. Search (filters)")
+    print("--*-- 5 --*--. Create Save List (output path, filters)")
+    print("--*-- 6 --*--. Play (song name from storage)")
     print("--*-- 7 --*--. Exit")
     return input("Please enter your choice (1-7): ")
 
@@ -49,7 +49,7 @@ def add_song():
             if key not in user_input:
                 user_input[key] = value
 
-    print("USER INPUT", user_input)
+    print("User input:", user_input)
     song_id = crud.Add_song(song_path, user_input)
     print(f'Song added with id: {song_id}')
 
@@ -73,16 +73,15 @@ def modify_data():
 def search():
     """Search for songs in the database based on filters specified by user by using Search function
     from 'filtering' file """
-    print("Fill the filters you want:")
 
-    user_input = utils.get_mapped_inputs()
+    user_input = utils.get_mapped_inputs_filters()
     filtering.Search(user_input)
 
 
 def create_savelist():
     """Create a savelist of songs based on specified filters by using Create_savelist function from 'filtering' file """
     output_path = input("Enter the output path for the savelist: ")
-    user_input = utils.get_mapped_inputs()
+    user_input = utils.get_mapped_inputs_filters()
 
     filtering.Create_save_list(output_path, user_input)
 

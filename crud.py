@@ -74,7 +74,7 @@ def Add_song(song_path, metadata):
         os.makedirs("Storage")
 
     try:
-        print("RECEIVED METADATAAA:", metadata)
+        print(f'Received metadata: {metadata}')
         file_name = os.path.basename(song_path)
         destination_path = os.path.join("Storage", file_name)
 
@@ -168,7 +168,7 @@ def Modify_data(song_id, metadata):
     try:
         valid_metadata_keys = ['Title', 'Artist', 'Album', 'Genre',
                                'Release Date', 'Track number', 'Composer',
-                               'Publisher', 'Track Length', 'Bitrate']
+                               'Publisher', 'Track Length']
         # check if user has provided invalid tags
         invalid_keys = [key for key in metadata.keys() if key not in valid_metadata_keys]
         if invalid_keys:
@@ -193,9 +193,7 @@ def Modify_data(song_id, metadata):
                 track_num = COALESCE(%s, track_num),
                 composer = COALESCE(%s, composer),
                 publisher = COALESCE(%s, publisher),
-                track_length = COALESCE(%s, track_length),
-                bitrate = COALESCE(%s, bitrate)
-
+                track_length = COALESCE(%s, track_length)
             WHERE id = %s
             """
 
@@ -209,7 +207,6 @@ def Modify_data(song_id, metadata):
                 metadata.get('Composer', existing_metadata[8]),
                 metadata.get('Publisher', existing_metadata[9]),
                 metadata.get('Track Length', existing_metadata[10]),
-                metadata.get('Bitrate', existing_metadata[11]),
                 song_id
             ))
 

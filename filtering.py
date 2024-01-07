@@ -37,12 +37,12 @@ def Search(filters):
 
         filters_values = [v for v in filters.values()]
 
-        print('FILTERS VALUES', filters_values)
+        print(f'Filters values:{filters_values}')
         cursor.execute(search_query, tuple(filters_values))
 
         songs_found = cursor.fetchall()
 
-        print("SONGS FOUND", songs_found)
+        print(f'Songs found: {songs_found}')
 
         if songs_found:
             print("Matching songs found:")
